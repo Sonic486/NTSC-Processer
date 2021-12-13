@@ -1,6 +1,6 @@
 CC = g++
 CFLAGS  = -Wall  
-LIBS = -lsndfile
+LIBS = -lsndfile -lvolk
 TARGET = idk
 
 all: $(TARGET)
