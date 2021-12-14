@@ -29,6 +29,7 @@ int main() {
     free(InFileArray);
     
     //Remove DC offset, or at least try to
+    printf("Removing DC offset\n");
     int DCOffsetAverage = 300;
     for(long int i = 0; i < fileinfo.frames; i+=DCOffsetAverage) {
         float averageReal = 0;
@@ -46,19 +47,20 @@ int main() {
         }
     }
 
-
+    int carrier = 59960;
+    printf("Mixing\n");
     unsigned int alignment = volk_get_alignment();
     lv_32fc_t* outputComplex = (lv_32fc_t*)volk_malloc(sizeof(lv_32fc_t)*fileinfo.frames, alignment);
-    // The oscillator rotates at f=0.1
-    float sinAngle = 2.0 * 3.14159265359 * 59960 / fileinfo.samplerate;
+    float sinAngle = 2.0 * 3.14159265359 * carrier / fileinfo.samplerate;
     lv_32fc_t phase_increment = lv_cmake(std::cos(sinAngle), std::sin(sinAngle));
-    lv_32fc_t phase= lv_cmake(1.f, 0.0f); // start at 1 (0 rad phase)
+    lv_32fc_t phase= lv_cmake(1.f, 0.0f);
     volk_32fc_s32fc_x2_rotator_32fc(outputComplex, inputComplex, phase_increment, &phase, fileinfo.frames);
     free(inputComplex);
 
     
-    
-    int k = std::round((float)fileinfo.frames / 15625);
+    printf("Applying comb filter\n");
+    int combFrequency = 15625;
+    int k = std::round((float)fileinfo.frames / combFrequency);
     printf("%d\n",k);
     float a = 0.9f;
     for(long int i = k; i < fileinfo.frames - k; i++) {
