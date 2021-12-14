@@ -8,7 +8,7 @@ int main() {
     //Read the WAV file and get some info on it, print that info
     SNDFILE *infile;
     SF_INFO fileinfo;
-    infile = sf_open("donno.wav", SFM_READ, &fileinfo);
+    infile = sf_open("test.wav", SFM_READ, &fileinfo);
     if (infile == NULL) {
         printf("Error opening file.\n");
         return 1;
@@ -30,8 +30,8 @@ int main() {
     
     //Remove DC offset, or at least try to
     printf("Removing DC offset\n");
-    int DCOffsetAverage = 300;
-    for(long int i = 0; i < fileinfo.frames; i+=DCOffsetAverage) {
+    int DCOffsetAverage = 10000; //Smaller value = bigger notch near DC
+    for(long int i = 0; i < fileinfo.frames - DCOffsetAverage; i+=DCOffsetAverage) { //Need to fix later
         float averageReal = 0;
         float averageImag = 0;
         for(int j = 0; j < DCOffsetAverage; j++) {
@@ -46,6 +46,7 @@ int main() {
             inputComplex[i+j] -= std::complex<float>(averageReal, averageImag);
         }
     }
+    
 
     int carrier = 59960;
     printf("Mixing\n");
@@ -60,9 +61,9 @@ int main() {
     
     printf("Applying comb filter\n");
     int combFrequency = 15625;
-    int k = std::round((float)fileinfo.frames / combFrequency);
+    int k = std::round((float)fileinfo.samplerate / combFrequency);
     printf("%d\n",k);
-    float a = 0.9f;
+    float a = 0.4f;
     for(long int i = k; i < fileinfo.frames - k; i++) {
         float real = outputComplex[i].real() + (a * outputComplex[i - k].real());
         float imag = outputComplex[i].imag() + (a * outputComplex[i - k].imag());
