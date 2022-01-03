@@ -99,6 +99,17 @@ int main() {
         }
     }
 
+    if (YesNoQuestion("Remove DC spike(volk)"))
+    {
+        printf("Removing DC offset(volk)\n");
+        lv_32fc_t DCoffset;
+        volk_32fc_accumulator_s32fc(&DCoffset, inputComplex, fileinfo.frames);
+        DCoffset = std::complex<float>(DCoffset.real() / fileinfo.frames, DCoffset.imag() / fileinfo.frames);
+        for(long int i = 0; i < fileinfo.frames; i++) {
+            inputComplex[i] -= DCoffset;
+        }
+    }
+
     
 
     if (YesNoQuestion("Wanna mix"))
